@@ -2,8 +2,6 @@ package SQL::Relationship;
 use 5.014002;
 
 use Mouse;
-use Scalar::Util ();
-use Carp         ();
 
 our $VERSION = "0.01";
 
@@ -35,7 +33,7 @@ sub dest_where {
 
 sub src_values {
     my ( $invocant, $src_rows, $src_column ) = @_;
-    my @src_rows = Scalar::Util::blessed $src_rows && $src_rows->can('all') ? $src_rows->all : @$src_rows;
+    my @src_rows = blessed $src_rows && $src_rows->can('all') ? $src_rows->all : @$src_rows;
     my @values = grep defined, map { $invocant->column_value( $_, $src_column ); } @src_rows;
     wantarray ? @values : \@values;
 }
@@ -43,10 +41,10 @@ sub src_values {
 sub column_value {
     shift;
     my ( $row, $column ) = @_;
-    return $row->{$column}           if ref $row                   && ref $row eq 'HASH';
-    return $row->get_column($column) if Scalar::Util::blessed $row && $row->can('get_column');
+    return $row->{$column}           if ref $row     && ref $row eq 'HASH';
+    return $row->get_column($column) if blessed $row && $row->can('get_column');
     return $row                      if !ref $row;
-    Carp::croak "not supported row type: @{[ref $row]}";
+    confess "not supported row type: @{[ref $row]}";
 }
 
 sub fetch_dest_rows {
