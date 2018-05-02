@@ -2,7 +2,7 @@ package SQL::Relationship;
 use 5.014002;
 
 use Mouse;
-use Lingua::EN::Inflect qw/PL/;
+use Lingua::EN::Inflect ();
 
 our $VERSION = "0.01";
 
@@ -138,8 +138,8 @@ sub _guess_name {
 sub _to_plural {
     my $words = shift;
     my $sep = join '|', map quotemeta, @WORD_SEPARATORS;
-    return $words =~ s/(?<=$sep)(.+?)$/PL($1)/er if $words =~ /$sep/;
-    return PL($words);
+    return $words =~ s/(?<=$sep)(.+?)$/Lingua::EN::Inflect::PL($1)/er if $words =~ /$sep/;
+    return Lingua::EN::Inflect::PL($words);
 }
 
 __PACKAGE__->meta->make_immutable;
