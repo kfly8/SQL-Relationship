@@ -2,8 +2,11 @@ package SQL::Relationship;
 use 5.014002;
 
 use Mouse;
+use Lingua::EN::Inflect qw/PL/;
 
 our $VERSION = "0.01";
+
+our @WORD_SEPARATORS = ( '-', '_', ' ' );
 
 has src_table    => ( is => 'ro', isa => 'Str',           required => 1 );
 has src_columns  => ( is => 'ro', isa => 'ArrayRef[Str]', required => 1 );
@@ -11,8 +14,7 @@ has dest_table   => ( is => 'ro', isa => 'Str',           required => 1 );
 has dest_columns => ( is => 'ro', isa => 'ArrayRef[Str]', required => 1 );
 has has_many     => ( is => 'ro', isa => 'Bool',          required => 1 );
 
-# TODO https://metacpan.org/source/KARUPA/Aniki-1.06/lib/Aniki/Schema/Relationship.pm#L56
-has name => ( is => 'ro', isa => 'Str' );
+has name => ( is => 'ro', isa => 'Str', default => \&_guess_name );
 
 has fetcher => ( is => 'rw', isa => 'CodeRef' );
 has relayer => ( is => 'rw', isa => 'CodeRef' );
@@ -114,6 +116,32 @@ sub reverse {
     );
 }
 
+# XXX: copy from Aniki::Schema::Relationship
+sub _guess_name {
+    my $self = shift;
+
+    my @src_columns  = @{ $self->src_columns };
+    my @dest_columns = @{ $self->dest_columns };
+    my $src_table    = $self->src_table;
+    my $dest_table   = $self->dest_table;
+
+    my $prefix
+        = ( @src_columns == 1 && $src_columns[0] =~ /^(.+)_\Q$dest_table/ ) ? $1 . '_'
+        : ( @dest_columns == 1 && $dest_columns[0] =~ /^(.+)_\Q$src_table/ ) ? $1 . '_'
+        :                                                                           '';
+
+    my $name = $self->has_many ? _to_plural($dest_table) : $dest_table;
+    return $prefix . $name;
+}
+
+# XXX: copy from Aniki::Schema::Relationship
+sub _to_plural {
+    my $words = shift;
+    my $sep = join '|', map quotemeta, @WORD_SEPARATORS;
+    return $words =~ s/(?<=$sep)(.+?)$/PL($1)/er if $words =~ /$sep/;
+    return PL($words);
+}
+
 __PACKAGE__->meta->make_immutable;
 __END__
 
@@ -184,7 +212,6 @@ SQL::Relationship is ...
 
 - Document
 - good namespace
-- guess relationship name
 - Default Fetcher like Aniki::Schema::Relationship::Fetcher
 
 =head1 SEE ALSO
