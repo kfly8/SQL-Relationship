@@ -67,7 +67,7 @@ sub relate_dest_rows {
 
 sub fetch_and_relate_dest_rows {
     my ( $self, $src_rows, $where, $opt ) = @_;
-    return $self->relayer->( $self, $src_rows, $self->fetch_dest_rows( $src_rows, $where, $opt ) );
+    return $self->relate_dest_rows( $src_rows, $self->fetch_dest_rows( $src_rows, $where, $opt ) );
 }
 
 sub fetch_src_rows {
