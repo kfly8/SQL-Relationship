@@ -8,7 +8,7 @@ my $r = SQL::Relationship->make_one( 'friend', 'user_id' => 'user', 'id', relaye
 my $src_rows = [ { user_id => 123 }, { user_id => 456 } ];
 
 subtest 'empty where, opt' => sub {
-    my ( $relationship, $got_src_rows, @args ) = $r->relate_dest_rows( $src_rows, foo => 'bar' );
+    my ( $relationship, $got_src_rows, @args ) = $r->relate_dest( $src_rows, foo => 'bar' );
     is $relationship, $r;
     is $got_src_rows, $src_rows;
     is_deeply \@args, [ foo => 'bar' ];

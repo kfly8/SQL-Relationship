@@ -30,16 +30,16 @@ SQL::Relationship - support create SQL for related tables
         $dbh->select_all($sql, @binds);
     });
 
-    my $dest_rows = $relationship->fetch_dest_rows([ { user_id => 123 }, { user_id => 456 }]);
+    my $dest_rows = $relationship->fetch_dest([ { user_id => 123 }, { user_id => 456 }]);
     # => fetch!
     #   SQL: SELECT id FROM user WHERE id IN (?)
     #   BINDS: [123, 456]
 
     # Set relayer
     $relationship->relayer(sub {
-        my ($relationship, $src_rows, $fetch_dest_rows_result) = @_;
+        my ($relationship, $src_rows, $fetch_dest_result) = @_;
 
-        my $dest_rows = $fetch_dest_rows_result;
+        my $dest_rows = $fetch_dest_result;
 
         my $src_column  = $relationship->src_columns->[0]; # user_id
         my $dest_column = $relationship->dest_columns->[0]; # id
@@ -52,7 +52,7 @@ SQL::Relationship - support create SQL for related tables
         }
     )}
 
-    $relationship->relate_dest_rows($src_rows, $dest_rows);
+    $relationship->relate_dest($src_rows, $dest_rows);
     # $friend->{relay}->{user} = { user_id => 123 }
 
 # DESCRIPTION

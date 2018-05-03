@@ -8,7 +8,7 @@ my $r = SQL::Relationship->make_one( 'friend', 'user_id' => 'user', 'id', fetche
 my $src_rows = [ { user_id => 123 }, { user_id => 456 } ];
 
 subtest 'empty where, opt' => sub {
-    my ( $relationship, $dest_table, $dest_columns, $where, $opt ) = $r->fetch_dest_rows($src_rows);
+    my ( $relationship, $dest_table, $dest_columns, $where, $opt ) = $r->fetch_dest($src_rows);
     is $relationship, $r;
     is $dest_table,   'user';
     is_deeply $dest_columns, ['id'];
@@ -18,7 +18,7 @@ subtest 'empty where, opt' => sub {
 
 subtest 'where' => sub {
     my ( $relationship, $dest_table, $dest_columns, $where, $opt )
-        = $r->fetch_dest_rows( $src_rows, { foo => 'bar' } );
+        = $r->fetch_dest( $src_rows, { foo => 'bar' } );
     is $relationship, $r;
     is $dest_table,   'user';
     is_deeply $dest_columns, ['id'];
@@ -28,7 +28,7 @@ subtest 'where' => sub {
 
 subtest 'opt / columns' => sub {
     my ( $relationship, $dest_table, $dest_columns, $where, $opt )
-        = $r->fetch_dest_rows( $src_rows, {}, { columns => ['foo'] } );
+        = $r->fetch_dest( $src_rows, {}, { columns => ['foo'] } );
     is $relationship, $r;
     is $dest_table,   'user';
     is_deeply $dest_columns, [ 'id', 'foo' ];
@@ -38,7 +38,7 @@ subtest 'opt / columns' => sub {
 
 subtest 'opt / foo => bar' => sub {
     my ( $relationship, $dest_table, $dest_columns, $where, $opt )
-        = $r->fetch_dest_rows( $src_rows, {}, { foo => 'bar' } );
+        = $r->fetch_dest( $src_rows, {}, { foo => 'bar' } );
     is $relationship, $r;
     is $dest_table,   'user';
     is_deeply $dest_columns, ['id'];

@@ -40,12 +40,12 @@ my $relationship = SQL::Relationship->new(
 
 setup($dbh);
 
-my $src_rows = $relationship->fetch_src_rows( { name => [ 'Aniki', 'TOML' ] }, { columns => ['name'] } );
-my $dest_rows = $relationship->fetch_dest_rows( $src_rows, {}, { columns => ['name'] } );
+my $src_rows = $relationship->fetch_src( { name => [ 'Aniki', 'TOML' ] }, { columns => ['name'] } );
+my $dest_rows = $relationship->fetch_dest( $src_rows, {}, { columns => ['name'] } );
 is_deeply $src_rows, [ { author_id => 2, name => 'Aniki' }, { author_id => 2, name => 'TOML' } ];
 is_deeply $dest_rows, [ { id => 2, name => 'karupanerura' } ];
 
-$relationship->relate_dest_rows( $src_rows, $dest_rows );
+$relationship->relate_dest( $src_rows, $dest_rows );
 is_deeply $src_rows,
     [
     { author_id => 2, name => 'Aniki', author => { id => 2, name => 'karupanerura' } },

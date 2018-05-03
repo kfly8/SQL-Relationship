@@ -48,7 +48,7 @@ sub column_value {
     confess "not supported row type: @{[ref $row]}";
 }
 
-sub fetch_dest_rows {
+sub fetch_dest {
     my ( $self, $src_rows, $where, $opt ) = @_;
     $where //= {};
     $opt   //= {};
@@ -59,17 +59,17 @@ sub fetch_dest_rows {
     return $self->fetcher->( $self, $self->dest_table, $dest_columns, $dest_where, $opt );
 }
 
-sub relate_dest_rows {
+sub relate_dest {
     my ( $self, $src_rows ) = ( shift, shift );
     return $self->relayer->( $self, $src_rows, @_ );
 }
 
-sub fetch_and_relate_dest_rows {
+sub fetch_and_relate_dest {
     my ( $self, $src_rows, $where, $opt ) = @_;
-    return $self->relate_dest_rows( $src_rows, $self->fetch_dest_rows( $src_rows, $where, $opt ) );
+    return $self->relate_dest( $src_rows, $self->fetch_dest( $src_rows, $where, $opt ) );
 }
 
-sub fetch_src_rows {
+sub fetch_src {
     my ( $self, $where, $opt ) = @_;
     $where //= {};
     $opt   //= {};
@@ -193,16 +193,16 @@ SQL::Relationship - support create SQL for related tables
         $dbh->select_all($sql, @binds);
     });
 
-    my $dest_rows = $relationship->fetch_dest_rows([ { user_id => 123 }, { user_id => 456 }]);
+    my $dest_rows = $relationship->fetch_dest([ { user_id => 123 }, { user_id => 456 }]);
     # => fetch!
     #   SQL: SELECT id FROM user WHERE id IN (?)
     #   BINDS: [123, 456]
 
     # Set relayer
     $relationship->relayer(sub {
-        my ($relationship, $src_rows, $fetch_dest_rows_result) = @_;
+        my ($relationship, $src_rows, $fetch_dest_result) = @_;
 
-        my $dest_rows = $fetch_dest_rows_result;
+        my $dest_rows = $fetch_dest_result;
 
         my $src_column  = $relationship->src_columns->[0]; # user_id
         my $dest_column = $relationship->dest_columns->[0]; # id
@@ -215,7 +215,7 @@ SQL::Relationship - support create SQL for related tables
         }
     )}
 
-    $relationship->relate_dest_rows($src_rows, $dest_rows);
+    $relationship->relate_dest($src_rows, $dest_rows);
     # $friend->{relay}->{user} = { user_id => 123 }
 
 
