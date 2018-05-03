@@ -26,6 +26,7 @@ sub relayer {
         my $dest_row = $dest_map{ $relationship->value_key_from_src($src_row) };
         $src_row->{ $relationship->name } = $dest_row;
     }
+    $src_rows;
 }
 
 my $relationship = SQL::Relationship->new(
@@ -45,12 +46,13 @@ my $dest_rows = $relationship->fetch_dest( $src_rows, {}, { columns => ['name'] 
 is_deeply $src_rows, [ { author_id => 2, name => 'Aniki' }, { author_id => 2, name => 'TOML' } ];
 is_deeply $dest_rows, [ { id => 2, name => 'karupanerura' } ];
 
-$relationship->relate_dest( $src_rows, $dest_rows );
-is_deeply $src_rows,
-    [
+my $expect = [
     { author_id => 2, name => 'Aniki', author => { id => 2, name => 'karupanerura' } },
     { author_id => 2, name => 'TOML',  author => { id => 2, name => 'karupanerura' } }
-    ];
+];
+
+is_deeply $relationship->relate_dest( $src_rows, $dest_rows ), $expect;
+is_deeply $relationship->fetch_and_relate_dest( $src_rows, {}, { columns => ['name'] } ), $expect;
 
 done_testing;
 
