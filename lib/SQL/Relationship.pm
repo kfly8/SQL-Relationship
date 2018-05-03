@@ -6,18 +6,17 @@ use Lingua::EN::Inflect ();
 
 our $VERSION = "0.01";
 
-our @WORD_SEPARATORS = ( '-', '_', ' ' );
-
 has src_table    => ( is => 'ro', isa => 'Str',           required => 1 );
 has src_columns  => ( is => 'ro', isa => 'ArrayRef[Str]', required => 1 );
 has dest_table   => ( is => 'ro', isa => 'Str',           required => 1 );
 has dest_columns => ( is => 'ro', isa => 'ArrayRef[Str]', required => 1 );
 has has_many     => ( is => 'ro', isa => 'Bool',          required => 1 );
 
-has name => ( is => 'ro', isa => 'Str', default => \&_guess_name );
-
 has fetcher => ( is => 'rw', isa => 'CodeRef' );
 has relayer => ( is => 'rw', isa => 'CodeRef' );
+
+has name                => ( is => 'ro', isa => 'Str', default => \&_guess_name );
+has value_key_separator => ( is => 'ro', isa => 'Str', default => '__VALUE_KEY_SEPARATOR__' );
 
 sub dest_where {
     my ( $self, $src_rows ) = @_;
@@ -79,6 +78,21 @@ sub fetch_src_rows {
     return $self->fetcher->( $self, $self->src_table, $src_columns, $where, $opt );
 }
 
+sub value_key_from_dest {
+    my ( $self, $dest_row ) = @_;
+    $self->_value_key( $self->dest_columns, $dest_row );
+}
+
+sub value_key_from_src {
+    my ( $self, $src_row ) = @_;
+    $self->_value_key( $self->src_columns, $src_row );
+}
+
+sub _value_key {
+    my ( $self, $columns, $row ) = @_;
+    join $self->value_key_separator, map { $self->column_value( $row, $_ ) } @$columns;
+}
+
 sub make_one  { shift->_make( 0, @_ ) }
 sub make_many { shift->_make( 1, @_ ) }
 
@@ -117,6 +131,8 @@ sub reverse {
 }
 
 # XXX: copy from Aniki::Schema::Relationship
+our @WORD_SEPARATORS = ( '-', '_', ' ' );
+
 sub _guess_name {
     my $self = shift;
 
@@ -128,13 +144,12 @@ sub _guess_name {
     my $prefix
         = ( @src_columns == 1 && $src_columns[0] =~ /^(.+)_\Q$dest_table/ ) ? $1 . '_'
         : ( @dest_columns == 1 && $dest_columns[0] =~ /^(.+)_\Q$src_table/ ) ? $1 . '_'
-        :                                                                           '';
+        :                                                                      '';
 
     my $name = $self->has_many ? _to_plural($dest_table) : $dest_table;
     return $prefix . $name;
 }
 
-# XXX: copy from Aniki::Schema::Relationship
 sub _to_plural {
     my $words = shift;
     my $sep = join '|', map quotemeta, @WORD_SEPARATORS;
