@@ -10,6 +10,36 @@ use DBI;
 my $builder = SQL::Maker->new( driver => 'SQLite' );
 my $dbh = DBI->connect('dbi:SQLite:dbname=test.db');
 
+sub setup {
+    my $dbh = shift;
+
+    $dbh->do('DROP TABLE module');
+    $dbh->do('DROP TABLE author');
+    $dbh->do( '
+    CREATE TABLE module (
+      id INTEGER PRIMARY KEY NOT NULL,
+      name VARCHAR(255),
+      author_id INTEGER,
+      FOREIGN KEY (author_id) REFERENCES author(id)
+    )' );
+
+    $dbh->do( '
+    CREATE TABLE author (
+      id INTEGER PRIMARY KEY NOT NULL,
+      name VARCHAR(255)
+    );
+    ' );
+
+    $dbh->do(q!INSERT INTO author (id, name) VALUES (1, 'songmu')!);
+    $dbh->do(q!INSERT INTO author (id, name) VALUES (2, 'karupanerura')!);
+
+    $dbh->do(q!INSERT INTO module (id, name, author_id) VALUES (1, 'DBIx::Schema::DSL', 1)!);
+    $dbh->do(q!INSERT INTO module (id, name, author_id) VALUES (2, 'Riji', 1)!);
+    $dbh->do(q!INSERT INTO module (id, name, author_id) VALUES (3, 'Aniki', 2)!);
+    $dbh->do(q!INSERT INTO module (id, name, author_id) VALUES (4, 'Time::Strptime', 2)!);
+    $dbh->do(q!INSERT INTO module (id, name, author_id) VALUES (5, 'TOML', 2)!);
+}
+
 sub fetcher {
     my ( $relationship, $dest_table, $dest_columns, $where, $opt ) = @_;
 
@@ -55,33 +85,3 @@ is_deeply $relationship->relate_dest( $src_rows, $dest_rows ), $expect;
 is_deeply $relationship->fetch_and_relate_dest( $src_rows, {}, { columns => ['name'] } ), $expect;
 
 done_testing;
-
-sub setup {
-    my $dbh = shift;
-
-    $dbh->do('DROP TABLE module');
-    $dbh->do('DROP TABLE author');
-    $dbh->do( '
-    CREATE TABLE module (
-      id INTEGER PRIMARY KEY NOT NULL,
-      name VARCHAR(255),
-      author_id INTEGER,
-      FOREIGN KEY (author_id) REFERENCES author(id)
-    )' );
-
-    $dbh->do( '
-    CREATE TABLE author (
-      id INTEGER PRIMARY KEY NOT NULL,
-      name VARCHAR(255)
-    );
-    ' );
-
-    $dbh->do(q!INSERT INTO author (id, name) VALUES (1, 'songmu')!);
-    $dbh->do(q!INSERT INTO author (id, name) VALUES (2, 'karupanerura')!);
-
-    $dbh->do(q!INSERT INTO module (id, name, author_id) VALUES (1, 'DBIx::Schema::DSL', 1)!);
-    $dbh->do(q!INSERT INTO module (id, name, author_id) VALUES (2, 'Riji', 1)!);
-    $dbh->do(q!INSERT INTO module (id, name, author_id) VALUES (3, 'Aniki', 2)!);
-    $dbh->do(q!INSERT INTO module (id, name, author_id) VALUES (4, 'Time::Strptime', 2)!);
-    $dbh->do(q!INSERT INTO module (id, name, author_id) VALUES (5, 'TOML', 2)!);
-}
